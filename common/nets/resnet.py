@@ -13,22 +13,23 @@ import torch.nn as nn
 from torchvision.models.resnet import BasicBlock, Bottleneck
 from torchvision.models.resnet import model_urls
 
-class ResNetBackbone(nn.Module):
 
+class ResNetBackbone(nn.Module):
     def __init__(self, resnet_type):
-	
-        resnet_spec = {18: (BasicBlock, [2, 2, 2, 2], [64, 64, 128, 256, 512], 'resnet18'),
-		       34: (BasicBlock, [3, 4, 6, 3], [64, 64, 128, 256, 512], 'resnet34'),
-		       50: (Bottleneck, [3, 4, 6, 3], [64, 256, 512, 1024, 2048], 'resnet50'),
-		       101: (Bottleneck, [3, 4, 23, 3], [64, 256, 512, 1024, 2048], 'resnet101'),
-		       152: (Bottleneck, [3, 8, 36, 3], [64, 256, 512, 1024, 2048], 'resnet152')}
+
+        resnet_spec = {
+            18: (BasicBlock, [2, 2, 2, 2], [64, 64, 128, 256, 512], "resnet18"),
+            34: (BasicBlock, [3, 4, 6, 3], [64, 64, 128, 256, 512], "resnet34"),
+            50: (Bottleneck, [3, 4, 6, 3], [64, 256, 512, 1024, 2048], "resnet50"),
+            101: (Bottleneck, [3, 4, 23, 3], [64, 256, 512, 1024, 2048], "resnet101"),
+            152: (Bottleneck, [3, 8, 36, 3], [64, 256, 512, 1024, 2048], "resnet152"),
+        }
         block, layers, channels, name = resnet_spec[resnet_type]
-        
+
         self.name = name
         self.inplanes = 64
         super(ResNetBackbone, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
-                               bias=False) # RGB
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -49,8 +50,13 @@ class ResNetBackbone(nn.Module):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion,
-                          kernel_size=1, stride=stride, bias=False),
+                nn.Conv2d(
+                    self.inplanes,
+                    planes * block.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
                 nn.BatchNorm2d(planes * block.expansion),
             )
 
@@ -77,10 +83,9 @@ class ResNetBackbone(nn.Module):
 
     def init_weights(self):
         org_resnet = torch.utils.model_zoo.load_url(model_urls[self.name])
-        # drop orginal resnet fc layer, add 'None' in case of no fc layer, that will raise error
-        org_resnet.pop('fc.weight', None)
-        org_resnet.pop('fc.bias', None)
-        
+        # drop original resnet fc layer, add 'None' in case of no fc layer, that will raise error
+        org_resnet.pop("fc.weight", None)
+        org_resnet.pop("fc.bias", None)
+
         self.load_state_dict(org_resnet)
         print("Initialize resnet from model zoo")
-
